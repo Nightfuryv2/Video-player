@@ -16,6 +16,21 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface AudioTrack {
+  enabled: boolean;
+  id: string;
+  kind: string;
+  label: string;
+  language: string;
+  sourceBuffer: any;
+}
+
+interface AudioTrackList {
+  [index: number]: AudioTrack;
+  length: number;
+  getTrackById(id: string): AudioTrack | null;
+}
+
 interface VideoPlayerProps {
   src: string;
 }
@@ -47,8 +62,8 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
       setDuration(video.duration);
       console.log("Video duration:", video.duration);
       
-      // Get available audio tracks
-      if (video.audioTracks) {
+      // Get available audio tracks if supported
+      if (video.audioTracks && video.audioTracks.length > 0) {
         setAudioTracks(Array.from(video.audioTracks));
         console.log("Available audio tracks:", video.audioTracks);
       }
@@ -153,7 +168,7 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
   };
 
   const changeAudioTrack = () => {
-    if (videoRef.current && videoRef.current.audioTracks) {
+    if (videoRef.current?.audioTracks && videoRef.current.audioTracks.length > 0) {
       const tracks = videoRef.current.audioTracks;
       const nextTrackIndex = (currentAudioTrack + 1) % tracks.length;
       
