@@ -11,6 +11,8 @@ import {
   SkipForward,
   SkipBack,
   RotateCw,
+  Subtitles,
+  Music,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +31,9 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
   const [showControls, setShowControls] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
+  const [showSubtitles, setShowSubtitles] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -41,6 +46,12 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
       console.log("Video duration:", video.duration);
+      
+      // Get available audio tracks
+      if (video.audioTracks) {
+        setAudioTracks(Array.from(video.audioTracks));
+        console.log("Available audio tracks:", video.audioTracks);
+      }
     };
 
     video.addEventListener("timeupdate", handleTimeUpdate);
@@ -131,10 +142,37 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  const toggleSubtitles = () => {
+    if (videoRef.current) {
+      const tracks = videoRef.current.textTracks;
+      if (tracks.length > 0) {
+        tracks[0].mode = showSubtitles ? 'hidden' : 'showing';
+        setShowSubtitles(!showSubtitles);
+      }
+    }
+  };
+
+  const changeAudioTrack = () => {
+    if (videoRef.current && videoRef.current.audioTracks) {
+      const tracks = videoRef.current.audioTracks;
+      const nextTrackIndex = (currentAudioTrack + 1) % tracks.length;
+      
+      // Disable all tracks
+      for (let i = 0; i < tracks.length; i++) {
+        tracks[i].enabled = false;
+      }
+      
+      // Enable the selected track
+      tracks[nextTrackIndex].enabled = true;
+      setCurrentAudioTrack(nextTrackIndex);
+      console.log("Changed to audio track:", nextTrackIndex);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
-      className="relative group"
+      className="relative group h-full"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
@@ -143,7 +181,9 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
         src={src}
         className="w-full h-full"
         onClick={togglePlay}
-      />
+      >
+        <track kind="subtitles" src="" label="English" />
+      </video>
 
       {/* Controls overlay */}
       <div
@@ -219,6 +259,28 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
             >
               <RotateCw />
               <span className="ml-1 text-xs">{playbackRate}x</span>
+            </Button>
+
+            {audioTracks.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:text-white/80"
+                onClick={changeAudioTrack}
+                title="Change Audio Track"
+              >
+                <Music />
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={toggleSubtitles}
+              title="Toggle Subtitles"
+            >
+              <Subtitles />
             </Button>
 
             <span className="text-white text-sm">
