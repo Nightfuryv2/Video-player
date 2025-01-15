@@ -8,6 +8,9 @@ import {
   VolumeX,
   Maximize,
   Minimize,
+  SkipForward,
+  SkipBack,
+  RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +28,7 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -79,6 +83,30 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
     if (videoRef.current) {
       videoRef.current.currentTime = newTime;
       setCurrentTime(newTime);
+    }
+  };
+
+  const skipForward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime += 10;
+    }
+  };
+
+  const skipBackward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime -= 10;
+    }
+  };
+
+  const changePlaybackRate = () => {
+    const rates = [0.5, 1, 1.5, 2];
+    const currentIndex = rates.indexOf(playbackRate);
+    const nextIndex = (currentIndex + 1) % rates.length;
+    const newRate = rates[nextIndex];
+    
+    if (videoRef.current) {
+      videoRef.current.playbackRate = newRate;
+      setPlaybackRate(newRate);
     }
   };
 
@@ -145,6 +173,24 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
               {isPlaying ? <Pause /> : <Play />}
             </Button>
 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={skipBackward}
+            >
+              <SkipBack />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={skipForward}
+            >
+              <SkipForward />
+            </Button>
+
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -163,6 +209,17 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
                 className="w-24"
               />
             </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={changePlaybackRate}
+              title="Playback Speed"
+            >
+              <RotateCw />
+              <span className="ml-1 text-xs">{playbackRate}x</span>
+            </Button>
 
             <span className="text-white text-sm">
               {formatTime(currentTime)} / {formatTime(duration)}
