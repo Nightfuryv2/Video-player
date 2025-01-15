@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { pipeline } from "@huggingface/transformers";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
 import {
@@ -9,18 +8,11 @@ import {
   VolumeX,
   Maximize,
   Minimize,
-  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VideoPlayerProps {
   src: string;
-}
-
-interface Subtitle {
-  text: string;
-  start: number;
-  end: number;
 }
 
 const VideoPlayer = ({ src }: VideoPlayerProps) => {
@@ -33,9 +25,6 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
-  const [currentSubtitle, setCurrentSubtitle] = useState<string>("");
-  const [isGeneratingSubtitles, setIsGeneratingSubtitles] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -43,11 +32,6 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
 
     const handleTimeUpdate = () => {
       setCurrentTime(video.currentTime);
-      // Update current subtitle
-      const currentSub = subtitles.find(
-        (sub) => video.currentTime >= sub.start && video.currentTime <= sub.end
-      );
-      setCurrentSubtitle(currentSub?.text || "");
     };
 
     const handleLoadedMetadata = () => {
@@ -62,45 +46,7 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
-  }, [subtitles]);
-
-  const generateSubtitles = async () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    setIsGeneratingSubtitles(true);
-    console.log("Starting subtitle generation...");
-
-    try {
-      const transcriber = await pipeline(
-        "automatic-speech-recognition",
-        "openai/whisper-tiny.en",
-        { device: "cpu" }
-      );
-
-      const result = await transcriber(video.src, {
-        chunk_length_s: 30,
-        stride_length_s: 5,
-        return_timestamps: true,
-      });
-
-      console.log("Transcription result:", result);
-
-      if (result.chunks) {
-        const newSubtitles = result.chunks.map((chunk: any) => ({
-          text: chunk.text,
-          start: chunk.timestamp[0],
-          end: chunk.timestamp[1],
-        }));
-        setSubtitles(newSubtitles);
-        console.log("Generated subtitles:", newSubtitles);
-      }
-    } catch (error) {
-      console.error("Error generating subtitles:", error);
-    } finally {
-      setIsGeneratingSubtitles(false);
-    }
-  };
+  }, []);
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -171,15 +117,6 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
         onClick={togglePlay}
       />
 
-      {/* Subtitles overlay */}
-      {currentSubtitle && (
-        <div className="absolute bottom-20 left-0 right-0 text-center">
-          <p className="text-white text-lg bg-black bg-opacity-50 px-4 py-2 inline-block rounded">
-            {currentSubtitle}
-          </p>
-        </div>
-      )}
-
       {/* Controls overlay */}
       <div
         className={cn(
@@ -233,23 +170,6 @@ const VideoPlayer = ({ src }: VideoPlayerProps) => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:text-white/80"
-              onClick={generateSubtitles}
-              disabled={isGeneratingSubtitles}
-            >
-              {isGeneratingSubtitles ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                "Generate Subtitles"
-              )}
-            </Button>
-
             <Button
               variant="ghost"
               size="icon"
