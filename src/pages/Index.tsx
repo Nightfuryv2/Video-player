@@ -29,6 +29,11 @@ const Index = () => {
     }
   };
 
+  const triggerFileInput = () => {
+    const fileInput = document.getElementById('video-upload') as HTMLInputElement;
+    fileInput?.click();
+  };
+
   return (
     <div 
       className="min-h-screen bg-gray-900 flex items-center justify-center"
@@ -44,12 +49,14 @@ const Index = () => {
           <p className="text-xl">Drag and drop a video file here to play</p>
           <p className="text-sm text-gray-400 mt-2">Supported formats: MP4, WebM, OGG</p>
           <div className="mt-4">
-            <label htmlFor="video-upload">
-              <Button variant="outline" className="gap-2">
-                <FolderOpen className="w-4 h-4" />
-                Choose from computer
-              </Button>
-            </label>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={triggerFileInput}
+            >
+              <FolderOpen className="w-4 h-4" />
+              Choose from computer
+            </Button>
             <input
               id="video-upload"
               type="file"
