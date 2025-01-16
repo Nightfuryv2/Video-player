@@ -1,5 +1,7 @@
 import VideoPlayer from "../components/VideoPlayer";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FolderOpen } from "lucide-react";
 
 const Index = () => {
   const [videoUrl, setVideoUrl] = useState<string>("");
@@ -18,6 +20,15 @@ const Index = () => {
     event.preventDefault();
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('video/')) {
+      const url = URL.createObjectURL(file);
+      setVideoUrl(url);
+      console.log("Video selected:", url);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen bg-gray-900 flex items-center justify-center"
@@ -32,6 +43,21 @@ const Index = () => {
         <div className="text-white text-center p-8 border-2 border-dashed border-gray-600 rounded-lg">
           <p className="text-xl">Drag and drop a video file here to play</p>
           <p className="text-sm text-gray-400 mt-2">Supported formats: MP4, WebM, OGG</p>
+          <div className="mt-4">
+            <label htmlFor="video-upload">
+              <Button variant="outline" className="gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Choose from computer
+              </Button>
+            </label>
+            <input
+              id="video-upload"
+              type="file"
+              accept="video/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
         </div>
       )}
     </div>
